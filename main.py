@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from models.todo import Todo
 
 
@@ -12,7 +12,7 @@ def list():
     return "Hello World!"
 
 
-@app.route("/add")
+@app.route("/add", methods=['GET', 'POST'])
 def add():
     """ Creates new todo item
     If the method was GET it should show new item form.
