@@ -27,6 +27,12 @@ def remove(todo_id):
     return "Remove " + todo_id
 
 
+@app.route("/edit/<todo_id>")
+def remove(todo_id):
+    """ Edit todo item with selected id from the database """
+    return "Edit " + todo_id
+
+
 @app.route("/toggle/<todo_id>")
 def toggle(todo_id):
     """ Toggles the state of todo item """
