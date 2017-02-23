@@ -27,9 +27,12 @@ def remove(todo_id):
     return "Remove " + todo_id
 
 
-@app.route("/edit/<todo_id>")
+@app.route("/edit/<todo_id>", methods=['GET', 'POST'])
 def edit(todo_id):
-    """ Edit todo item with selected id in the database """
+    """ Edits todo item with selected id in the database
+    If the method was GET it should show todo item form.
+    If the method was POST it shold update todo item in database.
+    """
     return "Edit " + todo_id
 
 
