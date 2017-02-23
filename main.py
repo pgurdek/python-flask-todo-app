@@ -29,7 +29,7 @@ def remove(todo_id):
 
 @app.route("/edit/<todo_id>")
 def edit(todo_id):
-    """ Edit todo item with selected id from the database """
+    """ Edit todo item with selected id in the database """
     return "Edit " + todo_id
 
 
