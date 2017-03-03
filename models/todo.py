@@ -5,7 +5,9 @@ class Todo:
     """ Class representing todo item."""
 
     def __init__(self, id, name, done=False):
-        pass
+        self.id = id
+        self.name = name
+        self.done = done
 
     def toggle(self):
         """ Toggles item's state """

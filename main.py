@@ -1,15 +1,61 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+import os
+from functools import wraps
 from models.todo import Todo
 
-
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+
+# login required decorator
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return f(*args, **kwargs)
+        else:
+            flash('You need to login first')
+            return redirect(url_for('login'))
+    return wrap
 
 
 @app.route("/")
-def list():
-    """ Shows list of todo items stored in the database.
-    """
-    return "Hello World!"
+@login_required
+def index():
+    return render_template('index.html')
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        if request.form['username'] == 'test' and request.form['password'] == "test":
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        else:
+            error = "Invalid Credentials. Please Try Again "
+
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    session.pop('logged_in', None)
+    return 'You are logged out Thank You'
+
+
+@app.route('/todo_list')
+@login_required
+def todo_list():
+    """ Shows list of todo items stored in the database."""
+
+
+# @app.route("/")
+# def list():
+#     """ Shows list of todo items stored in the database.
+#     """
+#     return "Hello World!"
 
 
 @app.route("/add", methods=['GET', 'POST'])
@@ -41,5 +87,6 @@ def toggle(todo_id):
     """ Toggles the state of todo item """
     return "Toggle " + todo_id
 
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

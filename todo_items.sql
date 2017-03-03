@@ -1,0 +1,2 @@
+INSERT INTO todo_items (id, name, priority, date, todo_list_id, due_to) VALUES (1, 'Task 1', 2, '2017-03-01', 1, null);
+INSERT INTO todo_items (id, name, priority, date, todo_list_id, due_to) VALUES (2, 'Task 2', 4, '2017-03-02', null, null);
