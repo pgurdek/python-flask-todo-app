@@ -1,11 +1,17 @@
 import sqlite3
-
+import os.path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "db.sqlite")
 
 class Database():
-    def connect_db(DATABASE_NAME='../db.sqlite'):
-        return sqlite3.connect(DATABASE_NAME)
 
-    def query(query, params=''):
+    @staticmethod
+    def connect_db(database = db_path):
+        print(database)
+        return sqlite3.connect(database)
+
+    @classmethod
+    def query(cls,query, params=''):
         """
         :param query: query with ?
         :param params: list or tuple of params (replace ?)
@@ -15,19 +21,23 @@ class Database():
         # params = list([login, password])
 
         query_result = list()
-        conn = connect_db()
+        conn = cls.connect_db()
+        print('conntected')
+        test = conn.execute(query)
+
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-
+        print(c)
         for row in c.execute(query, params):
             query_result.append(row)
 
         conn.commit()
 
-        close_db(conn)
+        cls.close_db(conn)
 
         if query_result != []:
             return query_result
 
+    @staticmethod
     def close_db(conn):
         conn.close()

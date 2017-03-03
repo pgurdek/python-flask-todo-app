@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import os
+from models.sql import Database
+from models.user import User
 from functools import wraps
 from models.todo import Todo
 
@@ -18,6 +20,16 @@ def login_required(f):
             return redirect(url_for('login'))
     return wrap
 
+def logged_already(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            flash('You are already logged, please logout first')
+            return redirect(url_for('logout'))
+        else:
+            flash('You need to login first')
+            return f(*args, **kwargs)
+    return wrap
 
 @app.route("/")
 @login_required
@@ -26,23 +38,31 @@ def index():
 
 
 @app.route("/login", methods=["GET", "POST"])
+@logged_already
 def login():
     error = None
+    users = User.listUsers()
     if request.method == "POST":
-        if request.form['username'] == 'test' and request.form['password'] == "test":
-            session['logged_in'] = True
-            return redirect(url_for('index'))
-        else:
-            error = "Invalid Credentials. Please Try Again "
+        for user in users:
+            if request.form['username'] == user.username and request.form['password'] == user.password:
+                session['logged_in'] = True
+                return redirect(url_for('index'))
+            else:
+                error = "Invalid Credentials. Please Try Again "
 
     return render_template("login.html", error=error)
 
 
-@app.route("/logout")
+@app.route("/logout",methods=["GET", "POST"])
 @login_required
 def logout():
-    session.pop('logged_in', None)
-    return 'You are logged out Thank You'
+    if request.method == "POST":
+        if request.form['logout'] == "1":
+            session.pop('logged_in', None)
+            flash('You are logged out, Have Fun')
+            redirect(url_for('login'))
+
+    return render_template('logout.html')
 
 
 @app.route('/todo_list')
