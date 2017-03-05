@@ -1,0 +1,51 @@
+{%include 'header.html' %}
+
+<h1>ToDo Project with ID {{ list_id }}</h1>
+<div class="taskWrapper">
+{% if tasksObjectList %}
+    {% for task in tasksObjectList %}
+
+        <div class="task task-id{{ task.id }}">
+
+            <span>{{ task.name }}</span>
+            <span> Done:{{ task.done }}</span>
+            <form action="" method="POST">
+            <input name="taskID" type="hidden" value="{{ task.id }}">
+            <input name="toggle" type="hidden" value="1">
+            <input type="submit" name="action" value="Toggle">
+            <input name="editTask" type="text" placeholder="Edit Task name">
+            <input type="submit" name="action" value="Save">
+            <input name="action" type="submit" value="Delete"  onclick="return confirm('Do you really want to submit the form?');">
+            </form>
+{#            <div class="edit">#}
+{#                <form name="edit" action="" method="POST">#}
+{#                <input name="taskID" type="hidden" value="{{ task.id }}">#}
+{#                <input name="editTask" type="text" placeholder="New task Name">#}
+{#                <input type="submit" value="Save">#}
+{#                </form>#}
+{#            </div>#}
+{#            <div class="remove">#}
+{#                <form name="edit" action="" method="POST">#}
+{#                <input name="taskID" type="hidden" value="{{ task.id }}">#}
+{#                <input name="removeTask" type="hidden" value="1">#}
+{#                <input type="submit" value="Remove">#}
+{#                </form>#}
+{#            </div>#}
+        </div>
+
+
+    {% endfor %}
+{% else %}
+    <p>There is not Task atm!</p>
+{% endif %}
+        <form action="" method="POST">
+
+            <input name="taskName" type="text" placeholder="Name of TodoList">
+            <input name="taskPriority" type="number" placeholder="Priority">
+            <input name="taskDueTo" type="date" placeholder="Due To">
+            <input name="action" type="submit" value="Add New Task">
+        </form>
+</div>
+<a href="/">Go Back To Projects</a>
+
+{% include 'footer.html' %}

@@ -1,5 +1,30 @@
 {%include 'header.html' %}
 
-<h1>MAIN PAGE</h1>
+<h1>Hello  {{ user.username }}</h1>
+<h3>Your List of Created Projects</h3>
+<div class="todo-list-wrapper">
+
+       <ul>
+       {% for todoList in todoObjectList %}
+           <li class="todo-list-item todo-list-{{ todoList.id }}">{{ todoList.name }}
+               <form action="todo_items" method="get">
+                    <input name="todoList" type="hidden" value="{{ todoList.id }}">
+                    <input type="submit" value="Check list">
+               </form>
+            <form action="" method="POST">
+                <input name="todoListID" type="hidden" value="{{ todoList.id }}">
+                <input name="actionListToDo" type="submit" value="Delete"  onclick="return confirm('Do you really want to submit the form?');">
+            </form>
+
+           </li>
+       {% endfor %}
+       </ul>
+        <form action="" method="POST">
+            <input name="todoName" type="text" placeholder="Name of TodoList">
+            <input name="username" type="hidden" value="{{ user.username }}">
+            <input name="actionListToDo" type="submit" value="Add New List">
+        </form>
+        <a href="/logout">Log Out</a>
+</div>
 
 {% include 'footer.html' %}

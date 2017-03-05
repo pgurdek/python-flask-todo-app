@@ -7,7 +7,6 @@ class Database():
 
     @staticmethod
     def connect_db(database = db_path):
-        print(database)
         return sqlite3.connect(database)
 
     @classmethod
@@ -22,12 +21,10 @@ class Database():
 
         query_result = list()
         conn = cls.connect_db()
-        print('conntected')
-        test = conn.execute(query)
-
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        print(c)
+        print(query)
+        print(params)
         for row in c.execute(query, params):
             query_result.append(row)
 
