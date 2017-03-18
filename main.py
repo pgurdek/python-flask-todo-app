@@ -1,16 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 import os
 import datetime
-from models.sql import Database
 from models.user import User
 from functools import wraps
 from models.todo import Todo
 from models.todo_list import TodoList
+from flask_sqlalchemy import  SQLAlchemy
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.user = None
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 
+#create the sqlalchemy object
+db = SQLAlchemy(app)
+db.create_all()
 
 # login required decorator
 def login_required(f):
@@ -148,6 +152,11 @@ def todo_items(getID=None):
             #     return redirect(url_for('index'))
     return render_template('todo_items.html')
 
+# @app.teardown_appcontext
+# def shutdown_session(exception=None):
+#     db_session.remove()
+
+
 
 # @app.route("/add", methods=['GET', 'POST'])
 # def add():
@@ -177,6 +186,8 @@ def todo_items(getID=None):
 # def toggle(todo_id):
 #     """ Toggles the state of todo item """
 #     return "Toggle " + todo_id
+
+
 
 
 if __name__ == "__main__":
