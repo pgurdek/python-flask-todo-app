@@ -1,4 +1,4 @@
-{%include 'header.html' %}
+{% include 'header.html' %}
 
 <h1>Do you want to Logout?</h1>
 
@@ -7,6 +7,6 @@
     <input type="submit" value="Log Out">
 </form>
 {% if error %}
-<h4>Error: {{ error }}</h4>
+    <h4>Error: {{ error }}</h4>
 {% endif %}
 {% include 'footer.html' %}

@@ -56,3 +56,16 @@ ul li{
 .task span:last-child{
     clear:both;
 }
+
+.filters{
+    width:100%;
+    display: block;
+}
+.filters .form-group{
+    display: inline-block;
+    padding:15px;
+}
+
+.change {
+    font-size: 15px;
+}

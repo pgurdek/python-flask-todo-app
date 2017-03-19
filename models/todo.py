@@ -1,38 +1,50 @@
-from models.sql import Database
+from models.alchemy_model import db
 
 
-class Todo:
+class Todo(db.Model):
     """ Class representing todo item."""
+    __tablename__ = 'todo_items'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    priority = db.Column(db.String(120))
+    create_date = db.Column(db.String)
+    todo_list_id = db.Column(db.Integer)
+    due_to = db.Column(db.String)
+    done = db.Column(db.Integer)
+    archived = db.Column(db.Integer)
 
-    def __init__(self, id, name, done=False, priority=1, create_date="", due_to=""):
+    def __init__(self, id,name, priority,create_date,todo_list_id,due_to,done,archived=0):
         self.id = id
         self.name = name
-        self.done = done
         self.priority = priority
         self.create_date = create_date
+        self.todo_list_id = todo_list_id
         self.due_to = due_to
+        self.done = done
+        self.archived = archived
+
+    def __repr__(self):
+        return 'TodoItems Name: {} Parent id {} Done : {}'.format(self.name,self.todo_list_id,self.done)
 
 
-    def addTask(self,list_id):
-        sqlQuery = "INSERT INTO todo_items(name,done,priority,create_date,due_to,todo_list_id) VALUES (?,?,?,?,?,?)"
-        param = [self.name, self.done, self.priority, self.create_date, self.due_to,list_id]
-        Database.query(sqlQuery,param)
 
     def toggle(self):
         """ Toggles item's state """
-        sqlQuery = "UPDATE todo_items SET done=? WHERE id=?"
-        toggle = not self.done
-        Database.query(sqlQuery, [toggle, self.id])
+        if self.done == 0:
+            self.done = 1
+        else: self.done = 0
 
     def save(self):
         """ Saves/updates todo item in database """
-        sqlQuery = "UPDATE todo_items SET name=? WHERE id=?"
-        Database.query(sqlQuery, [self.name, self.id])
+        db.session.flush()
+        db.session.add(self)
+        db.session.commit()
+
 
     def delete(self):
-        """ Removes todo item from the database """
-        sqlQuery = "DELETE FROM todo_items WHERE  id=?"
-        Database.query(sqlQuery, [self.id])
+        """ Archives todo item from the database """
+        self.archived = 1
+        self.save()
 
     @classmethod
     def get_all(cls, todoListID):
@@ -40,14 +52,23 @@ class Todo:
         Returns:
             list(Todo): list of all todos
         """
-        sqlQuery = "SELECT id,name,done,priority,create_date,due_to FROM todo_items WHERE todo_list_id=?"
-        allTasks = Database.query(sqlQuery, [todoListID, ])
-        taskObjectList = []
-        if allTasks:
-            for task in allTasks:
-                taskObjectList.append(Todo(task[0], task[1], [task[2]]))
+        todo_object_list = cls.query.filter_by(archived=0).filter(cls.todo_list_id==todoListID).order_by(cls.due_to).all()
+        return todo_object_list
 
-        return taskObjectList
+    @classmethod
+    def get_by_date(cls, date_from, date_to):
+        """
+        Get all todos between dates
+        :param date_from:
+        :param date_to:
+        :return:
+        """
+        if not date_from:
+            date_from = '1900-01-01'
+        if not date_to:
+            date_to = '2220-01-01'
+        todo_list  = cls.query.filter_by(archived=0).filter(cls.due_to.between(date_from, date_to)).order_by(cls.due_to).all()
+        return todo_list
 
     @classmethod
     def get_by_id(cls, id):
@@ -57,8 +78,6 @@ class Todo:
         Returns:
             Todo: Todo object with a given id
         """
-        sqlQuery = "SELECT id,name,done,priority,create_date,due_to FROM todo_items WHERE id=? "
-        print('Get by ID', Database.query(sqlQuery, [id, ]))
-        todoData = Database.query(sqlQuery, [id, ])[0]
+        todo_object = db.session.query(Todo).get(id)
+        return todo_object
 
-        return Todo(todoData[0], todoData[1], todoData[2])

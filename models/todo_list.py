@@ -1,30 +1,55 @@
-from models.sql import Database
-from models.user import User
+from models.alchemy_model import db
 
 
-class TodoList():
-    def __init__(self, name, id=None):
-        self.name = name
+class TodoList(db.Model):
+    __tablename__ = 'todo_lists'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    user_id = db.Column(db.Integer)
+
+    def __init__(self, id, name, user_id):
         self.id = id
+        self.name = name
+        self.user_id = user_id
+
+    def __repr__(self):
+        return 'ID: {} Name :{} User_id :{} '.format(self.id, self.name, self.user_id)
+
+    def delete(self):
+        """
+        Delete project from db
+        :return:
+        """
+        db.session.delete(self)
+        db.session.commit()
 
     @classmethod
     def listOfTodo(cls, user):
-        listOfTodo = []
-        sqlQuery = "SELECT todo_lists.id,name FROM todo_lists LEFT JOIN users ON users.id = user_id WHERE username=?"
-        dbListOfTodo = Database.query(sqlQuery, [user.username])
-        for todo in dbListOfTodo:
-            listOfTodo.append(TodoList(todo[1], todo[0]))
-
-        return listOfTodo
+        """
+        List all projects of user
+        :param user:
+        :return:
+        """
+        todos = cls.query.filter_by(user_id=user.id)
+        return todos
 
     @classmethod
     def addToDoList(cls, todoListName, user):
-        sqlQuery = "INSERT INTO todo_lists (name,user_id) VALUES (?,?)"
-        userID = user.getID()
-        Database.query(sqlQuery, [todoListName, userID])
+        """
+        Add to new project
+        :param todoListName:
+        :param user:
+        :return:
+        """
+        db.session.flush()
+        db.session.add(cls(None, todoListName, user.id))
+        db.session.commit()
 
     @classmethod
-    def removeToDoList(cls, todoListName, user):
-        sqlQuery = "DELETE FROM todo_lists WHERE user_id=? AND id=?"
-        userID = user.getID()
-        Database.query(sqlQuery, [userID, todoListName])
+    def get_by_id(cls, id):
+        """
+        Get project by id
+        :param id:
+        :return:
+        """
+        return cls.query.filter(cls.id == id).first()

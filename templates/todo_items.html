@@ -1,50 +1,57 @@
-{%include 'header.html' %}
+{% include 'header.html' %}
 
 <h1>ToDo Project with ID {{ list_id }}</h1>
 <div class="taskWrapper">
-{% if tasksObjectList %}
-    {% for task in tasksObjectList %}
+    {% if tasksObjectList %}
+        {% for task in tasksObjectList %}
 
-        <div class="task task-id{{ task.id }}">
+            <div class="task task-id{{ task.id }}">
 
-            <span>{{ task.name }}</span>
-            <span> Done:{{ task.done }}</span>
-            <form action="" method="POST">
-            <input name="taskID" type="hidden" value="{{ task.id }}">
-            <input name="toggle" type="hidden" value="1">
-            <input type="submit" name="action" value="Toggle">
-            <input name="editTask" type="text" placeholder="Edit Task name">
-            <input type="submit" name="action" value="Save">
-            <input name="action" type="submit" value="Delete"  onclick="return confirm('Do you really want to submit the form?');">
-            </form>
-{#            <div class="edit">#}
-{#                <form name="edit" action="" method="POST">#}
-{#                <input name="taskID" type="hidden" value="{{ task.id }}">#}
-{#                <input name="editTask" type="text" placeholder="New task Name">#}
-{#                <input type="submit" value="Save">#}
-{#                </form>#}
-{#            </div>#}
-{#            <div class="remove">#}
-{#                <form name="edit" action="" method="POST">#}
-{#                <input name="taskID" type="hidden" value="{{ task.id }}">#}
-{#                <input name="removeTask" type="hidden" value="1">#}
-{#                <input type="submit" value="Remove">#}
-{#                </form>#}
-{#            </div>#}
-        </div>
+                <span>{{ task.name }}</span>
+                <span> Done:{{ task.done }}</span>
+                <span>Due Date: {% if task.due_to %}{{ task.due_to }} {% else %} No due Date {% endif %}</span>
+                <form action="" method="POST">
+                    <input name="taskID" type="hidden" value="{{ task.id }}">
+                    <input name="toggle" type="hidden" value="1">
+                    <label class="change">Change Task Details</label>
+                    <input type="submit" name="action" value="Toggle">
+                    <input name="editTask" type="text" value={{ task.name }}>
+                    <input name="editDate" type="date" value="{{ task.due_to }}">
+                    <input type="submit" name="action" value="Save">
+                    <input name="action" type="submit" value="Delete"
+                           onclick="return confirm('Do you really want to submit the form?');">
+                </form>
+            </div>
 
 
-    {% endfor %}
-{% else %}
-    <p>There is not Task atm!</p>
-{% endif %}
-        <form action="" method="POST">
+        {% endfor %}
+    {% else %}
+        <p>There is not Task atm!</p>
+    {% endif %}
+    <form action="" method="POST">
 
-            <input name="taskName" type="text" placeholder="Name of TodoList">
-            <input name="taskPriority" type="number" placeholder="Priority">
-            <input name="taskDueTo" type="date" placeholder="Due To">
-            <input name="action" type="submit" value="Add New Task">
-        </form>
+        <input name="taskName" type="text" placeholder="Name of TodoList">
+        <input name="taskPriority" type="number" placeholder="Priority">
+        <input name="taskDueTo" type="date" placeholder="Due To">
+        <input name="action" type="submit" value="Add New Task">
+        <div class="filters">
+            <div class="form-group">
+
+                <label>From:</label>
+                <input id="d_from" type="date" name="d_from"/>
+            </div>
+            <div class="form-group">
+
+                <label>To:</label>
+
+                <input id="d_to" type="date" name="d_to"/>
+
+
+                <input name="action" type="submit" value="Filter"/>
+            </div>
+    </form>
+
+
 </div>
 <a href="/">Go Back To Projects</a>
 

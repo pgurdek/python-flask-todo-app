@@ -1,33 +1,43 @@
-from models.sql import Database
+from models.alchemy_model import db
 
 
-class User():
-    def __init__(self, username, password, avaiablelists=None):
-        self.username = username
-        self.password = password
-        self.avaiablelists = avaiablelists
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80))
+    password = db.Column(db.String(120))
 
-    @classmethod
-    def addUser(cls, username, password):
-        Database.query('INSERT OR IGNORE INTO USERS (username,password) VALUES (?,?)', [username, password])
+    # def __init__(self, id, username, password):
+    #     self.id = id
+    #     self.username = username
+    #     self.password = password
+
+    def __repr__(self):
+        return 'Username {}'.format(self.username)
+
+    def add_user(self):
+        """
+        Add user to database
+        :return:
+        """
+        db.session.flush()
+        db.session.add(self)
+        db.session.commit()
+
 
     @classmethod
     def userList(cls):
-        user_list = []
-        users = Database.query('SELECT * FROM USERS')
-        for user in users:
-            user_list.append(cls(user[1], user[2]))
-
-        return user_list
-
-    def getID(self):
-        query = "SELECT id FROM users WHERE username=?"
-        return Database.query(query, [self.username, ])[0][0]
-
-    def avaiableLists(self):
-        avaiableList = []
-        query = "SELECT todo_lists.id FROM todo_lists LEFT JOIN users ON user_id = users.id WHERE username=?"
-        for item in  Database.query(query, [self.username, ]):
-            avaiableList.append(item[0])
-        self.avaiablelists = avaiableList
-        print('Lista Dostepna', self.avaiablelists)
+        """
+        List all users
+        :return:
+        """
+        users = cls.query.all()
+        return users
+    @classmethod
+    def getID(cls,id):
+        """
+        Get user by id
+        :param id:
+        :return:
+        """
+        return db.session.query(User).get(id)

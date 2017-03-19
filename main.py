@@ -1,23 +1,30 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, g
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import os
 import datetime
 from models.user import User
-from functools import wraps
-from models.todo import Todo
 from models.todo_list import TodoList
-from flask_sqlalchemy import  SQLAlchemy
+from models.todo import Todo
+from functools import wraps
+from models.alchemy_model import db
+
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+db.app = app
+db.init_app(app)
 app.secret_key = os.urandom(24)
 app.user = None
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 
-#create the sqlalchemy object
-db = SQLAlchemy(app)
-db.create_all()
+
+
 
 # login required decorator
 def login_required(f):
+    """
+    Check if user is in session
+    :param f:
+    :return:
+    """
     @wraps(f)
     def wrap(*args, **kwargs):
         if 'logged_in' in session:
@@ -29,20 +36,14 @@ def login_required(f):
     return wrap
 
 
-# login required decorator
-def Permission(f):
-    @wraps(f)
-    def wrap(*args, **kwargs):
-        if session['todoIdRequest'] in app.user.avaiablelists:
-            return f(*args, **kwargs)
-        else:
-            flash('Wrong Persmission try again')
-            return redirect(url_for('index'))
-
-    return wrap
 
 
 def logged_already(f):
+    """
+    Redicret user to logout page
+    :param f:
+    :return:
+    """
     @wraps(f)
     def wrap(*args, **kwargs):
         if 'logged_in' in session:
@@ -58,6 +59,12 @@ def logged_already(f):
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
+    """
+    Show all projects of current user
+    Add project to current user
+    Remove project to current user
+    :return:
+    """
     userLogged = app.user
     todoObjectList = TodoList.listOfTodo(userLogged)
     if not todoObjectList:
@@ -68,22 +75,27 @@ def index():
                 TodoList.addToDoList(request.form['todoName'], userLogged)
                 return redirect(url_for('index'))
         elif request.form['actionListToDo'] == "Delete":
-            TodoList.removeToDoList(request.form['todoListID'], userLogged)
-            return redirect(url_for('index'))
+            project = TodoList.get_by_id(request.form['todoListID'])
+            project.delete()
+
     return render_template('index.html', user=userLogged, todoObjectList=todoObjectList)
 
 
 @app.route("/login", methods=["GET", "POST"])
 @logged_already
 def login():
+    """
+    Login to TODO app
+    :return:
+    """
     error = None
     users = User.userList()
     if request.method == "POST":
         for user in users:
+
             if request.form['username'] == user.username and request.form['password'] == user.password:
                 session['logged_in'] = True
                 app.user = user
-                app.user.avaiableLists()
                 return redirect(url_for('index'))
             else:
                 error = "Invalid Credentials. Please Try Again "
@@ -94,6 +106,10 @@ def login():
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
+    """
+    Log out from current session
+    :return:
+    """
     if request.method == "POST":
         if request.form['logout'] == "1":
             session.pop('logged_in', None)
@@ -105,10 +121,14 @@ def logout():
 
 
 @app.route('/todo_items', methods=["GET", "POST"])
-# @app.route('/todo_items?todoList=<int:getID>',methods=["GET", "POST"])
 @login_required
 def todo_items(getID=None):
-    """ Shows list of todo items stored in the database."""
+    """
+    Show all todos of current project
+    Add todos to current project
+    Remove todo from current project
+    :return:
+    """
     list_id = request.args.get('todoList')
     if request.method == 'GET':
         list_id = request.args.get('todoList')
@@ -122,71 +142,51 @@ def todo_items(getID=None):
             reqeustID = request.form['taskID']
             taskObject = Todo.get_by_id(reqeustID)
             taskObject.toggle()
+            taskObject.save()
             return redirect(url_for('todo_items', todoList=list_id))
         elif request.form['action'] == "Save":
             reqeustID = request.form['taskID']
             taskObject = Todo.get_by_id(reqeustID)
-            if request.form['editTask']:
-                taskObject.name = request.form['editTask']
-                taskObject.save()
+            taskObject.name = request.form['editTask']
+            taskObject.due_to = request.form['editDate']
+            taskObject.save()
             return redirect(url_for('todo_items', todoList=list_id))
         elif request.form['action'] == "Delete":
             reqeustID = request.form['taskID']
             taskObject = Todo.get_by_id(reqeustID)
-            taskObject.name = request.form['editTask']
             taskObject.delete()
             return redirect(url_for('todo_items', todoList=list_id))
         elif request.form['action'] == "Add New Task":
-            # if request.form('taskName') is not None and request.form('taskName') != '':
             name = request.form['taskName']
-            print(name)
             priority = request.form['taskPriority']
             currentDate = datetime.datetime.today().strftime('%Y-%m-%d')
-            dueTo = request.form['taskDueTo']
-            print(dueTo)
-            newTask = Todo(1, name, False, priority, currentDate, dueTo)
-            newTask.addTask(list_id)
+            newTask = Todo(None, name, priority, currentDate,list_id,dueTo,0)
+            newTask.save()
             return redirect(url_for('todo_items', todoList=list_id))
-            # if request.form['taskName'] != None and request.form['taskName'] != '':
-            #     TodoList.addToDoList(request.form['todoName'],userLogged)
-            #     return redirect(url_for('index'))
+
+        elif request.form['action'] == "Filter":
+            d_from = str(request.form.get('d_from'))
+            d_to = str(request.form.get('d_to'))
+            sortedTodos = Todo.get_by_date(d_from, d_to)
+            return render_template('todo_items.html', tasksObjectList=sortedTodos, list_id=list_id)
+
     return render_template('todo_items.html')
 
-# @app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     db_session.remove()
+@app.context_processor
+def override_url_for():
+    """Overrides url_for with additional values on end (cache prevent)"""
+    return dict(url_for=dated_url_for)
 
 
-
-# @app.route("/add", methods=['GET', 'POST'])
-# def add():
-#     """ Creates new todo item
-#     If the method was GET it should show new item form.
-#     If the method was POST it shold create and save new todo item.
-#     """
-#     return "Add todo"
-#
-#
-# @app.route("/remove/<todo_id>")
-# def remove(todo_id):
-#     """ Removes todo item with selected id from the database """
-#     return "Remove " + todo_id
-#
-#
-# @app.route("/edit/<todo_id>", methods=['GET', 'POST'])
-# def edit(todo_id):
-#     """ Edits todo item with selected id in the database
-#     If the method was GET it should show todo item form.
-#     If the method was POST it shold update todo item in database.
-#     """
-#     return "Edit " + todo_id
-#
-#
-# @app.route("/toggle/<todo_id>")
-# def toggle(todo_id):
-#     """ Toggles the state of todo item """
-#     return "Toggle " + todo_id
-
+def dated_url_for(endpoint, **values):
+    """Add on end to static files a int value(time)  """
+    if endpoint == 'static':
+        filename = values.get('filename', None)
+        if filename:
+            file_path = os.path.join(app.root_path,
+                                     endpoint, filename)
+            values['q'] = int(os.stat(file_path).st_mtime)
+    return url_for(endpoint, **values)
 
 
 
