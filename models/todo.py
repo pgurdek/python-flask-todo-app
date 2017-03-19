@@ -56,7 +56,7 @@ class Todo(db.Model):
         return todo_object_list
 
     @classmethod
-    def get_by_date(cls, date_from, date_to):
+    def get_by_date(cls, date_from, date_to,todoListID):
         """
         Get all todos between dates
         :param date_from:
@@ -67,7 +67,7 @@ class Todo(db.Model):
             date_from = '1900-01-01'
         if not date_to:
             date_to = '2220-01-01'
-        todo_list  = cls.query.filter_by(archived=0).filter(cls.due_to.between(date_from, date_to)).order_by(cls.due_to).all()
+        todo_list  = cls.query.filter_by(archived=0).filter(cls.todo_list_id==todoListID,cls.due_to.between(date_from, date_to)).order_by(cls.due_to).all()
         return todo_list
 
     @classmethod

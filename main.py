@@ -158,8 +158,11 @@ def todo_items(getID=None):
             return redirect(url_for('todo_items', todoList=list_id))
         elif request.form['action'] == "Add New Task":
             name = request.form['taskName']
+            dueTo = request.form['taskDueTo']
             priority = request.form['taskPriority']
             currentDate = datetime.datetime.today().strftime('%Y-%m-%d')
+
+
             newTask = Todo(None, name, priority, currentDate,list_id,dueTo,0)
             newTask.save()
             return redirect(url_for('todo_items', todoList=list_id))
@@ -167,7 +170,7 @@ def todo_items(getID=None):
         elif request.form['action'] == "Filter":
             d_from = str(request.form.get('d_from'))
             d_to = str(request.form.get('d_to'))
-            sortedTodos = Todo.get_by_date(d_from, d_to)
+            sortedTodos = Todo.get_by_date(d_from, d_to,list_id)
             return render_template('todo_items.html', tasksObjectList=sortedTodos, list_id=list_id)
 
     return render_template('todo_items.html')
